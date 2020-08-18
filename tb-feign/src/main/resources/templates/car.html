@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/js/bootstrap3/css/bootstrap.css}">
+    <script th:src="@{/js/jquery-1.11.3.min.js}"></script>
+    <script th:src="@{/js/bootstrap3/js/bootstrap.js}"></script>
+    <link rel="stylesheet" th:href="@{/js/bootstrap-table/bootstrap-table.css}">
+    <script th:src="@{/js/bootstrap-table/bootstrap-table.js}"></script>
+    <script th:src="@{/js/bootstrap-table/locale/bootstrap-table-zh-CN.js}"></script>
+
+    <link rel="stylesheet" th:href="@{/js/bootstrap-datetimepicker/css/bootstrap-datetimepicker.css}">
+    <script th:src="@{/js/bootstrap-datetimepicker/js/bootstrap-datetimepicker.js}"></script>
+    <script th:src="@{/js/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js}"></script>
+
+    <script th:src="@{/js/bootstrap-bootbox/bootbox.all.min.js}"></script>
+</head>
+<body>
+<div id="toolbar">
+    <button onclick="openCarInfo()" type="button"  class="btn btn-info glyphicon glyphicon-plus">新增</button>
+</div>
+
+<div id="carTable"></div>
+</body>
+<script>
+    $(function(){
+        initCarTable();
+    })
+    //查询
+    function initCarTable(){
+        $('#carTable').bootstrapTable({
+            url:'../selectCarList',//获取数据地址
+            method:'post',
+            toolbar:'#toolbar',
+            contentType:'application/x-www-form-urlencoded',//post请求按照表单方式
+            columns:[
+                [
+                {checkbox:true},
+                {field:'id',title:'编号'},
+                {field:'name',title:'汽车名称'},
+                {field:'price',title:'汽车价格'},
+                {field:'createTime',title:'上市时间'},
+                {field:'typeName',title:'汽车类型'},
+                {field:'color',title:'颜色'},
+                {field:'vendor',title:'厂商',},
+                {field:'cz',title:'操作',
+                    formatter:function(value,row,index){
+                        return '<a href="javascript:editCar('+row.id+');">修改</a>||<a href="javascript:deleteCar('+row.id+');">单删</a>'
+                    }
+                },
+            ]
+            ]
+        });
+    }
+    //修改回显
+    function editCar(id) {
+        bootbox.dialog({
+            title:'编辑汽车信息',
+            message:createAddContent('../editCar?id='+id),
+            closeButton:true,
+            size:'large',
+            buttons:{
+                cancel:{
+                    label:'取消',
+                    className:'btn-danger',
+                    callback:function(){
+
+                    }
+                },
+                ok:{
+                    label:'保存',
+                    className:'btn-info',
+                    callback:function(){
+                        updateCar();
+                    }
+                }
+            }
+        })
+    }
+
+    //修改
+    function updateCar() {
+        $.ajax({
+            url:'../updateCar',
+            type:'post',
+            data:$("#addCarInfo").serialize(),
+            dataType:'json',
+            success:function(data){
+                $('#carTable').bootstrapTable("refresh");
+            }
+        })
+    }
+
+    //新增
+    function openCarInfo(){
+        bootbox.dialog({
+            title:'新增汽车信息',
+            message:createAddContent('../toAddCar'),
+            closeButton:true,
+            size:'large',
+            buttons:{
+                cancel:{
+                    label:'取消',
+                    className:'btn-danger',
+                    callback:function(){
+
+                    }
+                },
+                ok:{
+                    label:'保存',
+                    className:'btn-info',
+                    callback:function(){
+                        saveCar();
+                    }
+                }
+            }
+        })
+
+    }
+    var res;
+    function createAddContent(url){
+        $.ajax({
+            url:url,
+            async:false,
+            success:function(data){
+                res = data;
+            }
+        });
+        return res;
+    }
+
+    //新增
+    function saveCar() {
+        $.ajax({
+            url:'../saveCar',
+            type:'post',
+            data:$("#addCarInfo").serialize(),
+            dataType:'json',
+            success:function(data){
+                $('#carTable').bootstrapTable("refresh");
+            }
+        })
+    }
+
+
+    //删除
+    function deleteCar(id) {
+        bootbox.confirm("确定要删除吗?",function(r){
+            if (r) {
+                $.post('../deleteCar',{id:id},function(data){
+                    $('#carTable').bootstrapTable("refresh");
+                })
+            }
+        })
+    }
+</script>
+</html>
